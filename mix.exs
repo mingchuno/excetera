@@ -4,8 +4,8 @@ defmodule Excetera.Mixfile do
   def project do
     [
       app: :excetera,
-      version: "0.0.1",
-      elixir: "~> 0.14.0",
+      version: "0.0.2",
+      elixir: "~> 1.2.0",
       deps: deps
     ]
   end
@@ -13,15 +13,15 @@ defmodule Excetera.Mixfile do
   def application do
     [
       mod: { Excetera.Application, [] },
-      applications: [:httpoison, :jazz],
+      applications: [:httpoison, :poison],
       env: [etcd_url: "http://127.0.0.1:4001/v2/keys"],
     ]
   end
 
   defp deps do
     [
-      {:httpoison, github: "edgurgel/httpoison"},
-      {:jazz, github: "meh/jazz"}
+      {:httpoison, "~> 0.8.0"},
+      {:poison, "~> 2.0"}
     ]
   end
 end

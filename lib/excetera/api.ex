@@ -1,4 +1,5 @@
 defmodule Excetera.API.Error do
+  @derive [Poison.Encoder]
   defstruct errorCode: 0, message: "", cause: "", index: 0
 end
 
@@ -66,10 +67,10 @@ defmodule Excetera.API do
     timeout = Keyword.get(options, :timeout, default_timeout)
 
     case HTTPoison.request(type, url, body, headers, [timeout: timeout]) do
-      %HTTPoison.Response{status_code: code, body: body} when code in [200, 201] ->
+      {:ok, %HTTPoison.Response{status_code: code, body: body}} when code in [200, 201] ->
         {:ok, decode_body(:ok, body, options)}
 
-      %HTTPoison.Response{status_code: 307} ->
+      {:ok, %HTTPoison.Response{status_code: 307}} ->
         # try again, die hard mode
         #
         # An etcd instance could be placed behind a proxy or a load balancer,
@@ -77,7 +78,7 @@ defmodule Excetera.API do
         # For this reason we are repeating the request at the same URL.
         request(type, url, headers, body, options)
 
-      %HTTPoison.Response{status_code: status, body: body} ->
+      {:ok, %HTTPoison.Response{status_code: status, body: body}} ->
         {:error, decode_body(:error, body, options) || status}
     end
   end
@@ -88,7 +89,7 @@ defmodule Excetera.API do
 
   defp decode_body(:ok, body, options) do
     case Keyword.get(options, :decode_body, true) do
-      succ when succ in [true, :success] -> Jazz.decode!(body)
+      succ when succ in [true, :success] -> Poison.decode!(body)
       _ -> nil
     end
   end
@@ -96,7 +97,7 @@ defmodule Excetera.API do
   defp decode_body(:error, body, options) do
     case Keyword.get(options, :decode_body, true) do
       err when err in [true, :error] ->
-        Jazz.decode!(body, as: Excetera.API.Error)
+        Poison.decode!(body, as: %Excetera.API.Error{})
       _ -> nil
     end
   end

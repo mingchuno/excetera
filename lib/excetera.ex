@@ -479,10 +479,10 @@ defmodule Excetera do
   end
 
   defp code_value(:en, val, :json) do
-    val |> Jazz.encode!
+    val |> Poison.encode!
   end
   defp code_value(:de, val, :json) do
-    val |> Jazz.decode!
+    val |> Poison.decode!
   end
 
   defp code_value(_, val, fun) when is_function(fun, 1) do

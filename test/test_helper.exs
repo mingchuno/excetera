@@ -1,4 +1,4 @@
-ExUnit.start exclude: [:slowpoke]
+ExUnit.start
 
 defmodule ExceteraTest.Helpers do
   def cleanup(root) do
