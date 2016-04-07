@@ -1,6 +1,8 @@
 Excetera
 ========
 
+[![Hex Version](http://img.shields.io/hexpm/v/excetera.svg)](https://hex.pm/packages/excetera)
+
 Bindings for [etcd][1]'s HTTP API.
 
   [1]: https://github.com/coreos/etcd
