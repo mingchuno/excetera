@@ -309,7 +309,7 @@ defmodule Excetera do
     {api_options, options} = split_options(options, [:timeout])
     case API.get(path, api_options, options) do
       {:ok, %{"node" => %{"dir" => true}=node}} ->
-        {:ok, process_dir_listing(node["nodes"], api_options)}
+        {:ok, process_dir_listing(node, api_options)}
       {:ok, _} -> {:error, "Not a directory"}
       {:error, %API.Error{message: message}} -> {:error, message}
     end
@@ -425,7 +425,7 @@ defmodule Excetera do
   defp process_api_value(value, options) do
     node = value["node"]
     case {node["dir"], Keyword.get(options, :dir, false)} do
-      {true, true} -> {:ok, process_dir_listing(node["nodes"], [])}
+      {true, true} -> {:ok, process_dir_listing(node, [])}
       {true, false} -> {:error, "Not a file"}
       {nil, _} -> {:ok, decode_api_node(node, options)}
     end
@@ -437,21 +437,27 @@ defmodule Excetera do
     decode_value(value, type)
   end
 
-  defp process_dir_listing(nodes, options) do
-    list = Enum.reduce(nodes, [], fn
-      %{"key" => key, "dir" => true}=node, acc ->
-        value = if options[:recursive] do
-          process_dir_listing(node["nodes"], options)
-        else
-          # FIXME: these defaults might not be the best choice
-          if options[:sorted], do: [], else: %{}
-        end
-        [{trunc_key(key), value}|acc]
+  defp process_dir_listing(node, options) do
+    nodes = node["nodes"]
+    if nodes do
+      list = Enum.reduce(nodes, [], fn
+        %{"key" => key, "dir" => true}=node, acc ->
+          value = if options[:recursive] do
+            process_dir_listing(node, options)
+          else
+            # FIXME: these defaults might not be the best choice
+            if options[:sorted], do: [], else: %{}
+          end
+          [{trunc_key(key), value}|acc]
 
-      %{"key" => key, "value" => value}, acc ->
-        [{trunc_key(key), value}|acc]
-    end)
-    if options[:sorted], do: Enum.reverse(list), else: Enum.into(list, %{})
+        %{"key" => key, "value" => value}, acc ->
+          [{trunc_key(key), value}|acc]
+      end)
+      if options[:sorted], do: Enum.reverse(list), else: Enum.into(list, %{})
+    else
+      # if dir is empty, return empty list or map
+      if options[:sorted], do: [], else: %{}
+    end
   end
 
   defp trunc_key(key) do

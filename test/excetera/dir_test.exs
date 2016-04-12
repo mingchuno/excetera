@@ -67,6 +67,23 @@ defmodule ExceteraTest.DirTest do
            {:ok, rec_listing}
   end
 
+  test "empty dir" do
+    assert Excetera.lsdir("/dir_test/empty") == {:error, "Key not found"}
+
+    key1 = Excetera.put! "/dir_test/empty", "hello"
+    key2 = Excetera.put! "/dir_test/empty", "world"
+    map = %{key1 => "hello", key2 => "world"}
+    assert Excetera.fetch("/dir_test/empty", dir: true) == {:ok, map}
+
+    :ok = Excetera.delete "/dir_test/empty/#{key1}"
+    :ok = Excetera.delete "/dir_test/empty/#{key2}"
+
+    assert Excetera.fetch("/dir_test/empty", dir: true) == {:ok, %{}}
+    assert Excetera.lsdir("/dir_test/empty", sorted: true, recursive: true) == {:ok, []}
+    assert Excetera.lsdir("/dir_test/empty", recursive: true) == {:ok, %{}}
+
+  end
+
   test "create and delete" do
     assert Excetera.lsdir("/dir_test/dir") == {:error, "Key not found"}
 
